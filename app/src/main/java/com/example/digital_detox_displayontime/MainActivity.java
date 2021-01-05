@@ -1,49 +1,72 @@
 package com.example.digital_detox_displayontime;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.View;
 import android.widget.Chronometer;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import static java.lang.Math.toIntExact;
 
 //Version 1.0 (04-01-2021)
 //Robert Lange and Daniela Scheling
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     private Chronometer chronometer;
     private long pauseOffset;
     private boolean running;
+    private boolean isScreenOn;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         chronometer = findViewById(R.id.chronometer);
-        chronometer.setFormat("Time: %s");
+//      chronometer.setFormat("Time: %s");
         chronometer.setBase(SystemClock.elapsedRealtime());
 
-        //Wird jede Sekunde ausgeführt
-        chronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
-            @Override
-            public void onChronometerTick(Chronometer chronometer) {
-                if (SystemClock.elapsedRealtime() - chronometer.getBase() >= 10000) {
-                    chronometer.setBase(SystemClock.elapsedRealtime());
-                    Toast.makeText(MainActivity.this, "10 sec. over", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+
+
+//        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+//        new Timer().scheduleAtFixedRate(new TimerTask() {
+//            @Override
+//            public void run() {
+//                if (powerManager.isScreenOn() == true) {
+//                    Log.d(TAG, "isScreenOn: true");
+//                    if (!running) {
+//                        chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
+//                        chronometer.start();
+//                        running = true;
+//                    }
+//                } else if (powerManager.isScreenOn() == false) {
+//                    Log.d(TAG, "isScreenOn: false");
+//                    if (running) {
+//                        chronometer.stop();
+//                        pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+//                        running = false;
+//                    }
+//                } else {
+//                    Log.d(TAG, "isScreenOn: Irgendetwas lief schief");
+//                }
+//            }
+//        }, 0, 5000); //put here time 1000 milliseconds=1 second
+
+
+//        //Wird jede Sekunde ausgeführt
+//        chronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+//            @Override
+//            public void onChronometerTick(Chronometer chronometer) {
+//                //Nach 10 Sekunden wird der Timer zurück gesetz
+//                if (SystemClock.elapsedRealtime() - chronometer.getBase() >= 10000) {
+//                    chronometer.setBase(SystemClock.elapsedRealtime());
+//                    Toast.makeText(MainActivity.this, "10 sec. over", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//        });
+
     }
+
 
     public void startChronometer(View v) {
         if (!running) {
@@ -63,4 +86,6 @@ public class MainActivity extends AppCompatActivity {
         chronometer.setBase(SystemClock.elapsedRealtime());
         pauseOffset = 0;
     }
+
+
 }

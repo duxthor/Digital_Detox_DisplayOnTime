@@ -37,6 +37,7 @@
         app:layout_constraintTop_toBottomOf="@+id/button2" />
 
     <Button
+        android:id="@+id/button3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="resetChronometer"
@@ -44,5 +45,29 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <EditText
+        android:id="@+id/edit_text_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Input"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="0dp" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="startService"
+        android:text="Start Service"
+        app:layout_constraintTop_toBottomOf="@+id/edit_text_input" />
+
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="stopService"
+        android:text="Stop Service"
+        app:layout_constraintTop_toBottomOf="@+id/button4" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
