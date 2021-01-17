@@ -1,13 +1,25 @@
 package com.example.digital_detox_displayontime;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AppOpsManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Chronometer;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 //Version 1.0 (04-01-2021)
 //Robert Lange and Daniela Scheling
@@ -21,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean isScreenOn;
     private EditText editTextInput;
 
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+    public static String SCREENONTIME_COUNTER ="Screen on time Counter";
+    private TextView screenOnTime_view;
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +49,38 @@ public class MainActivity extends AppCompatActivity {
 //      chronometer.setFormat("Time: %s");
         chronometer.setBase(SystemClock.elapsedRealtime());
 
+        sharedPreferences = getSharedPreferences("@strings/app_name", MODE_PRIVATE);
+        if (!checkUsageStatsAllowedOrNot()) {
+            Intent usageAccessIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            usageAccessIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(usageAccessIntent);
+            if (checkUsageStatsAllowedOrNot()) {
+                startService(new Intent(MainActivity.this, BackgroundService.class));
+            } else {
+                Toast.makeText(getApplicationContext(), "Berechtigungen werden benötigt.", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            startService(new Intent(MainActivity.this, BackgroundService.class));
+        }
+        screenOnTime_view = findViewById(R.id.screen_on_time);
+        TimerTask updateView = new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        long screen_on_time = sharedPreferences.getLong(SCREENONTIME_COUNTER,0);
+                        long second = (screen_on_time/1000)%60;
+                        long minute = (screen_on_time/(1000*60))%60;
+                        long hour = (screen_on_time/(1000*60*60));
+                        String screenOnTime_value = hour + " h " + minute + " m " + second +  " s ";
+                        screenOnTime_view.setText(screenOnTime_value);
+                    }
+                });
+            }
+        };
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(updateView,0, 1000);
 
 
 //        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -95,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
             running = true;
         }
     }
+
     public void pauseChronometer(View v) {
         if (running) {
             chronometer.stop();
@@ -102,10 +153,32 @@ public class MainActivity extends AppCompatActivity {
             running = false;
         }
     }
+
     public void resetChronometer(View v) {
         chronometer.setBase(SystemClock.elapsedRealtime());
         pauseOffset = 0;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public boolean checkUsageStatsAllowedOrNot() {
+        try{
+            PackageManager packageManager = getPackageManager();
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(getPackageName(), 0);
+            AppOpsManager appOpsManager = (AppOpsManager)getSystemService(APP_OPS_SERVICE);
+            int mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, applicationInfo.uid, applicationInfo.packageName);
+            return (mode == AppOpsManager.MODE_ALLOWED);
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "Fehler, es konnten keine Nutzungsdaten Manager gefunden werden.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+    }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    protected void onDestroy() {
+        if (checkUsageStatsAllowedOrNot()) {
+            startService(new Intent(MainActivity.this, BackgroundService.class));
+        }
+        super.onDestroy();
+    }
 }
